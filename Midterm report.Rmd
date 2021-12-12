@@ -31,27 +31,31 @@ library(lme4)
 library(arm)
 library(lmerTest)
 library(lattice)
+library(ggplot2)
+library(scales)
 eco <- read.xlsx("Final dataset original.xlsx",sheet=1)
 ```
 
 ## Abstract
 
-Autism spectrum disorder (ASD) has increased substantially over the decades, and some environmental risk factors has been identified. However, the association between parental socioeconomic status (SES) and child's ASD is unknown. In this project, large birth cohort data set was analyzed to examine the association, but any relationship between ASD and SES has not been found.
+Autism spectrum disorder (ASD) has increased substantially over the decades, and some environmental risk factors has been identified. However, the association between parental socioeconomic status (SES) and child's ASD is unknown. In this project, large birth cohort data set was analyzed to examine the association, and the odds of ASD with high SES was found to be significantly higher than that with low SES.
 
 
 ## Introduction
 
-The prevalence of autism spectrum disorder (ASD) has increased substantially over the past decades, from 6.7 in 2000 to 18.5 in 2016 per 1000 children, and this dramatic increase led to worldwide interest in the exploration of their condition.[1] Although up to 40–50% of the variance in ASD liability is determined by environmental factors and several pieces of evidence are presented for possible risk factors such as advanced parental age and maternal diseases, the association between SES and ASD is still to be clear and is inconsistent in previous studies.
+The prevalence of ASD has increased substantially over the past decades, from 6.7 in 2000 to 18.5 in 2016 per 1000 children, and ASD accounted for 7.7 million disability-adjusted life years (DALYs) in 2010, which was the leading mental cause of disability in children under five years old in terms of years lived with disability (YLDs).[1,2] Although up to 40–50% of the variance in ASD liability is determined by environmental factors and several pieces of evidence are presented for possible risk factors such as advanced parental age and maternal diseases, the association between SES and ASD is still to be clear and is inconsistent in previous studies.[2]
 
-To address this question, I used dataset from large Japanese birth cohort, Japan Environment and Children’s Study (JECS). JECS is a nationwide epidemiological study involving 100,000 mother-child pairs living throughout Japan. I used the data of 82413 children in JECS who responded to the 3-year-old questionnaire, which included a question about ASD diagnosis. Multiple separate logistic regression models were used with SES variables individually (household income, maternal and paternal education level) as explanatory variables and diagnosis of ASD as outcome variables, controlling for other possible risk factors such as maternal and maternal age, parental history of ASD and other relevant variables when necessary.  
+To address this question, I used and analyzed data set from large Japanese birth cohort, Japan Environment and Children’s Study (JECS). JECS is a nationwide epidemiological study involving 100,000 mother-child pairs living throughout Japan, and the data was collected in 15 regions throughout the country.[3] I used the data of 82413 children in JECS who responded to the 3-year-old questionnaire, which included a question about ASD diagnosis. 
+
+Multiple separate logistic regression model were used with SES variables individually (household income, maternal and paternal education level) as explanatory variables and diagnosis of ASD as outcome variables, controlling for other possible risk factors such as paternal age, parental history of ASD and child's sex.  
 
 Therefore I use multilevel models to see what and how factors may influence the number of comments of talks. Before that, I clean the data and combine some information collected from YouTube for same talk video.
 
 ## Method
 
-### Data set
+### Data wrangling
 
-I applied for the data provision to National Institute for Environmental Study in Japan, and the data set was extracted from JECS data server, which is not public for now.  
+I applied for the data provision to National Institute for Environmental Study in Japan, and the data set was extracted from JECS data server, which is not public for now. The raw data extracted from the JECS server included 104062 observations,  
 
 Firstly, for some columns are 'dictionary' type so I need to clean them up, removing symbols that are useless. Secondly, I count the number of available languages, mutate it as a new column; Thirdly, I merged two data set into one and select the columns that I need; Finally, I transfered dates into POSIXct type by using Lubridate package.
 Here are some explanations of columns:
@@ -71,20 +75,18 @@ Then, I got the cleaned data with 2165 observations and 32 variables. But I will
 ### Exploratory Data Analysis
 
 ```{r include=FALSE}
-talks %<>% mutate(duration_min = duration_ted/60)
-talks %<>% mutate(log_views = log(view_ted))
-talks %<>% mutate(log_comments = log(comments))
-talks %<>% filter(log_comments>=0)
-talks %<>% mutate(log_numlang = log(num_lang))
-talks %<>% mutate(english = ifelse(native_lang=="en",1,0))
-talks %<>% mutate(s_duration = (duration_ted-mean(duration_ted))/sd(duration_ted))
-talks %<>% mutate(s_views = (view_ted-mean(view_ted))/sd(view_ted))
-talks %<>% mutate(s_numlang = (num_lang-mean(num_lang)/sd(num_lang)))
-talks$s_numlang <- (talks$num_lang-mean(talks$num_lang))/sd(talks$num_lang)
-talks$s_duration <- (talks$duration_ted-mean(talks$duration_ted))/sd(talks$duration_ted)
-talks %<>% mutate(log_duration = log(duration_ted))
-talks %<>% mutate(english = ifelse(native_lang=="en","English","not English"))
+eco2 <- eco %>% 
+  mutate(Income=ifelse(eco$Income==1,"low",ifelse(eco$Income>=5,"high","middle"))) %>% 
+  drop_na(ASD) %>% filter(sex!="3") %>% 
+  mutate_at(c("ASD","sex","fASD","mASD","unit_no"),as.factor)%>%
+  mutate(unit_no=fct_recode(unit_no,"Hokkaido"="10","Miyagi"="20","Fukushima"="30","Chiba"="40","Kanagawa"="50",
+                        "Koshin"="61","Koshin"="62","Toyama"="70","Aichi"="80","Kyoto"="91","Kyoto"="92",
+                        "Osaka"="100","Hyogo"="110","Tottori"="120","Kochi"="130","Fukuoka"="141","Fukuoka"="142",
+                        "MinamiKyushu"="151","MinamiKyushu"="152","MinamiKyushu"="153")) %>%
+  mutate(sex=fct_recode(sex,"male"="1","female"="2", "unknown"="3"))  
+eco2$Income <- factor(eco2$Income, levels = c("low","middle","high"))
 ```
+
 
 
 For the covariates, I used parental age, parental history of ASD, and child's sex, all of which are suspected as environmental risk factors of child's ASD.
@@ -99,28 +101,51 @@ ggplot(data = talks)+
   geom_smooth(aes(color = categories),method = "lm",se=F)+
   facet_grid(~english)
 
-eco%>%
-  mutate_at(c("ASD","fASD"),factor) %>% 
-  drop_na(fASD,ASD) %>%ggplot()+
+# Contingency table for fASD and ASD
+prop.table(table(eco2$fASD, eco2$ASD), margin=1)*100
+table <- table(eco2$fASD, eco2$ASD)
+addmargins(table)
+
+eco2 %>% drop_na(fASD,ASD) %>%
+  ggplot(aes(x = as.factor(fASD), y = as.factor(ASD), fill = as.factor(ASD))) +
+   geom_bar(stat='identity',position =position_stack(reverse =TRUE))
+
+eco2%>% 
+  drop_na(fASD,ASD) %>%
+  ggplot()+
   geom_mosaic(aes(x = product(ASD, fASD), fill=ASD)) + 
   labs(title="Mosaic graph for child's ASD and father's ASD")
 
-eco%>%
+# Contingency table for mASD and ASD
+prop.table(table(eco2$mASD, eco2$ASD), margin=1)*100
+table <- table(eco2$mASD, eco2$ASD)
+addmargins(table)
+
+eco2%>%
   mutate_at(c("ASD","mASD"),factor) %>% 
   drop_na(ASD,mASD) %>%ggplot()+
   geom_mosaic(aes(x = product(ASD, mASD), fill=ASD)) + 
   labs(title="Mosaic graph for child's ASD and father's ASD")
 
-eco%>%
+# Contingency table for sex and ASD
+prop.table(table(eco2$sex, eco2$ASD), margin=1)*100
+table <- table(eco2$sex, eco2$ASD)
+addmargins(table)
+
+eco2%>%
   mutate_at(c("ASD","sex"),factor) %>% 
   drop_na(ASD,sex) %>%ggplot()+
   geom_mosaic(aes(x = product(ASD, sex), fill=ASD)) + 
+   ylim(0.95, 1) +
   labs(title="Mosaic graph for child's ASD and father's ASD")
 
-eco%>%
-  mutate_at(c("ASD","Income"),factor) %>% 
-  drop_na(ASD,Income) %>%ggplot()+
+eco2%>%
+  drop_na(ASD,Income) %>%
+  ggplot()+
   geom_mosaic(aes(x = product(ASD, Income), fill=ASD)) + 
+  coord_cartesian(ylim = c(0.95, 1))+
+  scale_y_continuous( breaks = c(0.95,1), name = "Proportion of ASD")+
+  facet_wrap( ~ unit_no, ncol=3)+
   labs(title="Mosaic graph for child's ASD and father's ASD")
 ```
 
@@ -160,6 +185,14 @@ fit4 <- lmer(log_comments~log_duration+log_views+log_numlang+(1+log_duration|cat
 #confint(fit4)
 coef(fit4)
 summary(fit4)
+
+
+
+fit.glmer1 <- glmer(ASD ~ Income + sex +fASD + mASD+ fathersage+ (1 + Income|unit_no), data = eco3, family = binomial)
+summary(fit.glmer1)
+coef(fit.glmer1)
+binnedplot(fitted(fit.glmer1),resid(fit.glmer1,type="response"),main="Multilevel logistic regression")
+
 ```
 
 Considering different categories, I will use multilevel model to fit the data. And for three continues variables-duration, number of language and duration-in order to match  the plots in EDA, I take log of them as predictors and also take log of number of comments as outcome. Since from EDA it is clear that talks in different categories have different correlation with variables, so I use varying slope and varying intercept in multilevel models. Besides, just as I mentioned before, English talks will only be taken into account. Below is the function:   
@@ -224,6 +257,16 @@ I only use three variables to predict the outcome, but there are still some vari
 
 ## Citation
 
+1. Center for Disease Control and Prevention: Autism Spectrum Disorder (ASD)
+https://www.cdc.gov/ncbddd/autism/data.html  
+
+2. Modabbernia, A., Velthorst, E., & Reichenberg, A. (2017). Environmental risk factors for autism: an evidence-based review of systematic reviews and meta-analyses. Molecular autism, 8, 13. 
+https://doi.org/10.1186/s13229-017-0121-4  
+
+3. National Institute for Environmental Study in Japan: Japan Environment and Children’s Study
+https://www.env.go.jp/chemi/ceh/en/index.html
+
+
 University of Wisconsin. Mixed Models: Diagnostics and Inference. https://www.ssc.wisc.edu/sscc/pubs/MM/MM_DiagInfer.html
 
 Hadley Wickham (2017). tidyverse: Easily Install and Load the ‘Tidyverse’. R package version 1.2.1.
@@ -274,11 +317,12 @@ talks %>%
 ### Full Results
 Random effects of model
 ```{r echo=FALSE}
-ranef(fit4)
+quantile(eco2$Income, probs = c(20, 40, 50, 60, 80, 100)/100, na.rm = TRUE)
+ranef(fit.glmer1)
 ```
 Fixed effects of model
 ```{r echo=FALSE}
-fixef(fit4)
+fixef(fit.glmer1)
 ```
 Coefficients of model
 ```{r echo=FALSE}
