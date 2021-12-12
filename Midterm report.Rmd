@@ -33,6 +33,8 @@ library(lmerTest)
 library(lattice)
 library(ggplot2)
 library(scales)
+library(ggpubr)
+library(languageR)
 eco <- read.xlsx("Final dataset original.xlsx",sheet=1)
 ```
 
@@ -83,7 +85,8 @@ eco2 <- eco %>%
                         "Koshin"="61","Koshin"="62","Toyama"="70","Aichi"="80","Kyoto"="91","Kyoto"="92",
                         "Osaka"="100","Hyogo"="110","Tottori"="120","Kochi"="130","Fukuoka"="141","Fukuoka"="142",
                         "MinamiKyushu"="151","MinamiKyushu"="152","MinamiKyushu"="153")) %>%
-  mutate(sex=fct_recode(sex,"male"="1","female"="2", "unknown"="3"))  
+  mutate(sex=fct_recode(sex,"male"="1","female"="2", "unknown"="3")) %>% 
+  rename(district=unit_no)
 eco2$Income <- factor(eco2$Income, levels = c("low","middle","high"))
 ```
 
@@ -139,14 +142,40 @@ eco2%>%
    ylim(0.95, 1) +
   labs(title="Mosaic graph for child's ASD and father's ASD")
 
+# Mosaic graph for Income and ASD grouped by unit
 eco2%>%
   drop_na(ASD,Income) %>%
   ggplot()+
   geom_mosaic(aes(x = product(ASD, Income), fill=ASD)) + 
   coord_cartesian(ylim = c(0.95, 1))+
   scale_y_continuous( breaks = c(0.95,1), name = "Proportion of ASD")+
-  facet_wrap( ~ unit_no, ncol=3)+
+  facet_wrap( ~ district, ncol=3)+
   labs(title="Mosaic graph for child's ASD and father's ASD")
+
+# Boxplot for paternal age and ASD 
+ggplot(eco2, aes(x=district, y=fathersage, fill=ASD)) + 
+    geom_boxplot()
+ggplot(eco2, aes(x=ASD, y=fathersage, fill=ASD)) + 
+    geom_boxplot()
+
+# Boxplot for maternal age and ASD 
+ggplot(eco2, aes(x=district, y=momsage, fill=ASD)) + 
+    geom_boxplot()
+ggplot(eco2, aes(x=ASD, y=momsage, fill=ASD)) + 
+    geom_boxplot()
+
+#Correlation between parental age
+ggscatter(eco2, x = "fathersage", y = "momsage", 
+          add = "reg.line", conf.int = TRUE, 
+          cor.coef = TRUE, cor.method = "pearson",
+          xlab = "Paternal age", ylab = "Maternal age")
+
+res <- cor.test(eco3$momsage, eco3$fathersage, 
+                    method = "pearson")
+res
+res$p.value
+res$estimate
+
 ```
 
 Figure 1 show the relationship between number of views and comments. But this plot indicates that the speaker of majority of videos is speaking English, so I will consider only to fit model on English talks. And in the English group, it is obviously that with different contents the slope and intercept are slightly different, but the trend is almost the same, pointing to top-right. 
@@ -188,10 +217,11 @@ summary(fit4)
 
 
 
-fit.glmer1 <- glmer(ASD ~ Income + sex +fASD + mASD+ fathersage+ (1 + Income|unit_no), data = eco3, family = binomial)
+fit.glmer1 <- glmer(ASD ~ Income + sex +fASD + mASD+ fathersage + (1 + Income|district), data = eco2, family = binomial)
 summary(fit.glmer1)
 coef(fit.glmer1)
 binnedplot(fitted(fit.glmer1),resid(fit.glmer1,type="response"),main="Multilevel logistic regression")
+pairscor.fnc(ranef(fit.glmer1)$district)
 
 ```
 
