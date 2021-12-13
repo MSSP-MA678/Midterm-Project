@@ -46,14 +46,14 @@ eco <- read.xlsx("Final dataset original.xlsx",sheet=1)
 
 ## Abstract
 
-Autism spectrum disorder (ASD) has increased substantially over the decades, and some environmental risk factors has been identified. However, the association between parental socioeconomic status (SES) and child's ASD is unknown. In this project, large birth cohort data set was analyzed to examine the association, and the odds of ASD with high SES was found to be significantly higher than that with low SES.
+Autism spectrum disorder (ASD) has increased substantially over the decades, and some environmental risk factors has been identified. However, the association between parental socioeconomic status (SES) and child's ASD is unknown. In this project, large birth cohort data set was analyzed to examine the association, and the odds of children with high parental SES developing ASD was found to be significantly higher than that with low parental SES.
 
 
 ## Introduction
 
 The prevalence of ASD has increased substantially over the past decades, from 6.7 in 2000 to 18.5 in 2016 per 1000 children, and ASD accounted for 7.7 million disability-adjusted life years (DALYs) in 2010, which was the leading mental cause of disability in children under five years old in terms of years lived with disability (YLDs).[1,2] Although up to 40–50% of the variance in ASD liability is determined by environmental factors and several pieces of evidence are presented for possible risk factors such as advanced parental age and maternal diseases, the association between SES and ASD is still to be clear and is inconsistent in previous studies.[2]
 
-To address this research question, I used and analyzed data set from large Japanese birth cohort, Japan Environment and Children’s Study (JECS). JECS is a nationwide epidemiological study involving 100,000 mother-child pairs living throughout Japan, and the data was collected in 15 regions throughout the country.[3] I used the data of 82232 children in JECS who responded to the 3-year-old questionnaire, which included a question about ASD diagnosis, and fit the multiple logistic regression model to see if SES is related to child's ASD. 
+To address this research question, I used and analyzed data set from large Japanese birth cohort, Japan Environment and Children’s Study (JECS). JECS is a nationwide epidemiological study involving 100,000 mother-child pairs living throughout Japan, and the data was collected in 15 regions throughout the country.[3] I used the data of 40438 children in JECS who responded to the 3-year-old questionnaire, which included a question about ASD diagnosis, and fit the multiple logistic regression model to see if SES is related to child's ASD. 
 
 ## Method
 
@@ -61,9 +61,9 @@ To address this research question, I used and analyzed data set from large Japan
 
 I applied for the data provision to National Institute for Environmental Study in Japan, and the data set was extracted from JECS data server, which is not public for now. Two raw data sets were extracted from the JECS server which included 104062 observations and different variables; one includes id, district, child's sex, Income, parental age and parental ASD history, and the other includes id and child's ASD.  
 
-After I merged the two data sets based on id as an identifier, I recategorize income values to align with the objective of this project. For the income category, there were originally nine levels of classification, from Category 1 which corresponds to an annual income of less than 2 million yen, to Category 9 which corresponds to more than 20 million yen. In this project, I will look for the relationship between SES and ASD, and particularly see if low-SES or high-SES could be related with high ratio of ASD. In this perspective, I need to recategorize income into 3 levels of classification, low, middle and high, as a proxy of SES, and I defined the categories below the bottom quintile of income as low income, the categories above the top quintile of income as high income and the others as middle income, which also follows the income category of Cabinet Office in Japan.[4]   
+After I merged the two data sets based on id as an identifier, I recategorize income values to align with the objective of this project. For the income category, there were originally nine levels of classification, from Category 1 which corresponds to an annual income of less than 2 million yen, to Category 9 which corresponds to more than 20 million yen. In this project, I will look for the relationship between SES and ASD, and particularly see if low-SES or high-SES could be related with high odds of ASD. In this perspective, I need to recategorize income into 3 levels of classification, low, middle and high, as a proxy of SES, and I defined the categories below the bottom quintile of income as low income, the categories above the top quintile of income as high income and the others as middle income, which also follows the income category of Cabinet Office in Japan.[4]   
 
-Secondly, I assumed missing completely at random and removed observations with missing value for ASD, sex, Income, paternal age, and parental ASD and with sex value of 3 categorized as "unknown", which leads to 40438 observations from original 104062 observations. Finally, I converted variable type for "ASD", "sex","fASD","mASD","unit_no" from numeric to factor, assigned appropriate label or name to variable name and values, and assigned levels in ascending order to income category. Each variable name and explanation used in this project is shown below.
+Secondly, I assumed missing completely at random and removed observations with missing value for ASD, sex, Income, paternal age, and parental ASD and observations with sex value of 3 categorized as "unknown", which reduced original 104062 observations to 40438 observations. Finally, I converted variable type for "ASD", "sex","fASD","mASD","unit_no" from numeric to factor, assigned appropriate label or name to variable name and values, and assigned levels in ascending order to income category. Each variable name and explanation used in this project is shown below.
 
 
 | column names      | explanation |
@@ -97,7 +97,7 @@ eco2 <- eco %>%
 eco2$Income <- factor(eco2$Income, levels = c("low","middle","high"))
 
 ```
-Contingency table for child's sex and ASD is shown below. ASD seems to be more frequent for male compared to female in this cohort, and this is already proved and accepted in the world.[5]
+Contingency table for child's sex and ASD is shown below. ASD seems to be more frequent for male compared to female in this cohort, which is already proved and accepted in the world.[5]
 
 |sex|Child with ASD|Child w/o ASD|Total
 |:--|:--|:---|:--|
@@ -105,7 +105,7 @@ Male|20501 (99.4%)|131 (0.6%)|20632
 Female|19762 (99.8%)|44 (0.2%)|19806
 \hline Sum|40263 (99.6%)|175 (0.4%)|40438
   
-Contingency tables for parental ASD and child's ASD are shown below. The prevalence of ASD in parents of both sexes is less than 0.03%, which is extremely low compared to the prevalence of 0.4% in children. Although parental ASD and child's ASD seem to be related, as one out of 20 parents with ASD has a child with ASD, there is an uncertainty due to the very small sample size of parental ASD.  
+Contingency tables for parental ASD and child's ASD are shown below. The prevalence of ASD in parents of both sexes is less than 0.03%, which is extremely low compared to the prevalence of 0.4% in children. This might be because adults developing ASD have difficulty in marriage or having children. Based on this table, parental ASD and child's ASD seem to be related since one out of 20 parents developing ASD has a child with ASD, but there is an uncertainty due to the very small sample size of parental ASD.  
 
 | |Child with ASD|Child w/o ASD|Total
 |:--|:--|:---|:--|
@@ -134,6 +134,7 @@ eco2%>%
 ```
 
 Figure 1 shows the prevalence of ASD by income, for each of the 15 regions. Here, note that the y-axis starts at 0.95 because the prevalence of ASD is very low. Although there is variation across regions, the prevalence of ASD in the low-income category seems to be generally lower than in other income categories.  
+  
 Finally, I look at the relationship between ASD and paternal age as below.  
 
 ```{r echo=FALSE, fig.height=4, fig.width= 10,fig.cap="Density plot for child's ASD and paternal age"}
@@ -157,8 +158,8 @@ Figure 2 shows density plot for the paternal age by child's ASD. Based on the gr
 fit <- glmer(ASD ~ Income + sex +fASD + mASD+ fathersage + (1 + Income|district), data = eco2, family = binomial)
 ```
 
-I will use the multilevel logistic regression model to fit the data, selecting ASD as an outcome and Income, sex, parental ASD, and paternal age as predictors. All the predictors excluding income are thought of as risk factors for ASD.[1] As the maternal age is highly correlated with paternal age (Appendix), which will make the model unstable if included, and is still to be investigated as a risk factor for ASD, I will not include maternal age in this model.[6]  
-Based on the EDA, prevalence of ASD by income seems to be different in different district. In addition, the diagnostic rate of ASD could differ in different districts which have different facilities and diagnostic skills, the improvement of which is partly attributable to the rapid increase of ASD, I assume random effect for the intercept as well as income coefficient. On the other hand, the effect of child's sex, parental ASD, and paternal age on development of ASD is through biological pathway. Thus their effects can be thought of as fixed one, and not affected by district. Then I fit the model to the data as below.  
+I decided to use the multilevel logistic regression model to fit the data, selecting ASD as an outcome and Income, sex, parental ASD, and paternal age as predictors. All the predictors excluding income are thought of as risk factors for ASD.[1] As the maternal age is highly correlated with paternal age (Appendix), which will make the model unstable if included, and is still to be investigated as a risk factor for ASD, I will not include maternal age in this model.[6]  
+Based on the EDA, prevalence of ASD by income seems to be different in different district. In addition, the accuracy and the rate of appropriate ASD diagnosis could differ in different districts which have different facilities and diagnostic skills, which can affect the base ASD prevalence in each district, I assume random effect for the intercept as well as income coefficient. On the other hand, the effect of child's sex, parental ASD, and paternal age on development of ASD is through biological pathway, which cannot be affected by diagnostic skills or social effect. Thus, their effects can be thought of as fixed one. Based on this way of thinking, I fit the model to the data as below.  
 
 ```{r eval=FALSE}
 fit <- glmer(ASD ~ Income + sex +fASD + mASD+ fathersage + (1 + Income|district), 
@@ -182,8 +183,8 @@ Fixed effects and fitted model are shown below.
 
 
 $$\begin{split}logit(\pi)= -10.17 + 3.31\ast (MiddleIncome) + 3.51\ast (HighIncome) - 1.06\ast (female) -\\28.13\ast (paternalASD) + 3.47\ast (maternalASD) + 0.05\ast (paternalage)\end{split}$$
-The effect estimates of high income as well as sex, maternal ASD and paternal age were significant at the significance level of 0.05. For example, the interpretation for high income and paternal age are as follows; the odds of children with high family income developing ASD is exp(3.51)=33.4 times as high as that with low income, holding other predictors and district constant; the odds of children whose father is older by one year developing ASD is exp(0.05)=1.05 times as high as that of children whose father is younger.  
-Sample of effect estimates including random effect are shown below. In Hokkaido and Fukushima, though there are some variation for intercept and income effect, those are close each other and also close to fixed effect estimates. However, in Kanagawa the intercept is far larger than the other ones, and the income effect is even reversed.
+The effect estimates of high income as well as sex, maternal ASD and paternal age were significant at the significance level of 0.05. For example, the interpretation for high income and paternal age are as follows; the odds of children with high family income developing ASD is exp(3.51)=33.4 times as high as that with low income, holding other predictors and district constant; the odds of children whose father is older by one year developing ASD is exp(0.05)=1.05 times as high as that of children whose father is younger holding other predictors constant.  
+For some districts as an example, effect estimates are shown below (all the results are in Appendix). Though in Hokkaido and Fukushima there are some variation for intercept and income effect, those are close to each other and also close to fixed effect estimates. However, in Kanagawa the intercept is far larger than the others, and the sign of income effect is even reversed.
 ```{r echo=FALSE}
 kable(coef(fit)[["district"]][c(1,3,5),]) %>% 
   kable_styling(latex_options="scale_down") %>%
@@ -192,10 +193,10 @@ kable(coef(fit)[["district"]][c(1,3,5),]) %>%
 
 ## Discussion
 
-All the covariates except for income and paternal ASD were significant. Those results are reasonable because various previous studies shown that male child, parental ASD and paternal older age are risk factors for child's ASD, and those effects are not likely to be affected by region or social environment. In this study the paternal ASD only showed negative effect, which is opposed to what we expected. This can be because the sample size of paternal ASD was only 10 and there was no child's ASD case with paternal ASD, which lead to large standard deviation of the effect estimate. The other results consistent with previous studies might support the validity of this study.  
-With regard to income, high income was significantly associated with a high prevalence of ASD in this study. This is a trend seen in countries without universal health insurance, such as the United States, and this trend can be partially due to diagnostic bias where the higher the income, the more likely ASD will be diagnosed as the patient with high income will be able to visit a highly specialized medical institution.[7] However, Japan has adopted universal health insurance system, so the possibility of diagnostic bias might be low. On the other hand, etiologically, it is thought that the stress on the mother due to low income can cause epigenetic changes in the fetal brain and increase the risk of autism, and in fact some countries with universal health insurance has shown negative or no association between SES and ASD.[6] In addition, though high income is generally correlated with parental age, since the model accounted for parental age, the results would show the pure income effect. Based on these results, the positive effect of the high income in this study is surprising and not what we could expect. There might be another diagnostic bias where those parents with higher income are more sensitive to their child's health and tend to take children to a doctor, but this reasoning needs further research.  
-FOr the mixed effect, we had negative income effect in Kanagawa.When compared to the effects in other regions, the value represents an outlier, but as mentioned earlier, it is consistent with the results for countries with universal health care. This needs further comparison between Kanagawa and other regions with context and other data set.  
-Finally,  this study needs sensitivity analysis. We assumed the missing values are completely at random. However, those who have ASD child might have more difficulty in keeping up with this study and might drop easily, or more firmly stick to this study because this study can be a channel to the specialist and specific treatment for ASD. Most of the dropped observations in this study are due to lack of fathers' answers, which were systematically not collected because of limited data collection period, but we still need sensitivity analysis to show the validity of our results.
+All the covariates except for paternal ASD were significant. Those results are reasonable because various previous studies shown that male child, parental ASD and paternal older age are risk factors for child's ASD, and those effects are not likely to be affected by region or social environment. In this project the paternal ASD only showed negative effect, which is opposed to what we expected. This can be because the sample size of paternal ASD was only 10 and there was no child's ASD case with paternal ASD, which lead to large standard deviation of the effect estimate. The other results consistent with previous studies might support the validity of this project.  
+With regard to income, high income was significantly associated with a high prevalence of ASD in this study. This is a trend seen in countries without universal health insurance, such as the United States, and this trend can be partially due to diagnostic bias where the higher the income, the more likely ASD will be diagnosed as the patient with high income will be able to visit a highly specialized medical institution.[7] However, Japan has adopted universal health insurance system, so the possibility of diagnostic bias might be low. On the other hand, etiologically, it is thought that the stress on the mother due to low income can cause epigenetic changes in the fetal brain and increase the risk of autism, and in fact some countries with universal health insurance has shown negative or no association between SES and ASD.[6] In addition, parental age can be a confounding factor for the association between high income and ASD, but the model accounted for parental age so that this confounding is unlikely to be the cause of the positive association between income and ASD. Considering these facts, the positive association is surprising and not what we expected. There might be another diagnostic bias where those parents with higher income are more sensitive to their child's health and tend to take children to a doctor, but this reasoning needs further research.  
+For the mixed effect, we had negative income effect in Kanagawa. When compared to the effects in other regions, the value seems to be an outlier, but as mentioned earlier, it is consistent with the results for countries with universal health care. This needs further comparison between Kanagawa and other regions with context and other data set.  
+Finally,  this study needs sensitivity analysis. We assumed the missing values are completely at random. However, those who have ASD children might have more difficulty in keeping up with this study and might drop easily, or more firmly stick to this study because this study can be a channel to the specialist and specific treatment for ASD. Most of the dropped observations in this study are due to lack of fathers' answers, which were systematically not collected because of limited data collection period, but we still need sensitivity analysis to show the validity of our results.
 
 
 ## Citation
@@ -292,12 +293,12 @@ ggscatter(eco2, x = "fathersage", y = "momsage",
 
 
 ```
-
+\newpage
 ### Model Validation
 
-```{r echo=FALSE, fig.height=2.5, fig.width=6, message=FALSE,warning=FALSE}
+```{r echo=FALSE, fig.height=5, fig.width=6, message=FALSE,warning=FALSE}
 binnedplot(fitted(fit),resid(fit,type="response"),main="Binned residual plot for Multilevel logistic regression")
-## 'fill' and label lines:
+cat(" ","\n")
 cat(" ","\n")
 cat("The pairwise plot of by-district random effects","\n")
 pairscor.fnc(ranef(fit)$district)
