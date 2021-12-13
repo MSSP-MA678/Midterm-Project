@@ -155,10 +155,6 @@ Figure 2 shows density plot for the paternal age by child's ASD. Based on the gr
 
 ```{r include=FALSE}
 fit <- glmer(ASD ~ Income + sex +fASD + mASD+ fathersage + (1 + Income|district), data = eco2, family = binomial)
-summary(fit)
-coef(fit)
-binnedplot(fitted(fit),resid(fit,type="response"),main="Multilevel logistic regression")
-pairscor.fnc(ranef(fit)$district)
 ```
 
 I will use the multilevel logistic regression model to fit the data, selecting ASD as an outcome and Income, sex, parental ASD, and paternal age as predictors. All the predictors excluding income are thought of as risk factors for ASD.[1] As the maternal age is highly correlated with paternal age (Appendix), which will make the model unstable if included, and is still to be investigated as a risk factor for ASD, I will not include maternal age in this model.[6]  
@@ -196,13 +192,11 @@ kable(coef(fit)[["district"]][c(1,3,5),]) %>%
 
 ## Discussion
 
-All the covariates except for income and paternal ASD were significant. Those are 
+All the covariates except for income and paternal ASD were significant. Those results are reasonable because various previous studies shown that male child, parental ASD and paternal older age are risk factors for child's ASD, and those effects are not likely to be affected by region or social environment. In this study the paternal ASD only showed negative effect, which is opposed to what we expected. This can be because the sample size of paternal ASD was only 10 and there was no child's ASD case with paternal ASD, which lead to large standard deviation of the effect estimate. The other results consistent with previous studies might support the validity of this study.  
+With regard to income, high income was significantly associated with a high prevalence of ASD in this study. This is a trend seen in countries without universal health insurance, such as the United States, and this trend can be partially due to diagnostic bias where the higher the income, the more likely ASD will be diagnosed as the patient with high income will be able to visit a highly specialized medical institution.[7] However, Japan has adopted universal health insurance system, so the possibility of diagnostic bias might be low. On the other hand, etiologically, it is thought that the stress on the mother due to low income can cause epigenetic changes in the fetal brain and increase the risk of autism, and in fact some countries with universal health insurance has shown negative or no association between SES and ASD.[6] In addition, though high income is generally correlated with parental age, since the model accounted for parental age, the results would show the pure income effect. Based on these results, the positive effect of the high income in this study is surprising and not what we could expect. There might be another diagnostic bias where those parents with higher income are more sensitive to their child's health and tend to take children to a doctor, but this reasoning needs further research.  
+FOr the mixed effect, we had negative income effect in Kanagawa.When compared to the effects in other regions, the value represents an outlier, but as mentioned earlier, it is consistent with the results for countries with universal health care. This needs further comparison between Kanagawa and other regions with context and other data set.  
+Finally,  this study needs sensitivity analysis. We assumed the missing values are completely at random. However, those who have ASD child might have more difficulty in keeping up with this study and might drop easily, or more firmly stick to this study because this study can be a channel to the specialist and specific treatment for ASD. Most of the dropped observations in this study are due to lack of fathers' answers, which were systematically not collected because of limited data collection period, but we still need sensitivity analysis to show the validity of our results.
 
-The estimates are all reasonable in some extents. The longer the duration, the more information the speaker conveys, so people are more likely to have some perspectives; The larger the number of views, the more people will debate and have some comments; The more the number of available languages, the more people will have access to these talks, so people all over the world will talk together. Due to features of different categories, the different estimates of three predictors are also convincing.     
-
-The result of model almost matches well for different categories in EDA, but there are still some problems. In EDA part we see that some lines have negative slopes which means that the increasing in duration will make the number of comments decrease. But because for majority of categories, duration have a positive impact on number of comments, so although I use multilevel model with varying slope to fit the data, all the estimates of duration indicate that it has positive influence on comments for all categories.  
-
-I only use three variables to predict the outcome, but there are still some variables that may have big effects on comments, such as who is the speaker, the occupation of the speaker and the contents of talks. Actually there is a column contains the information of occupation, but it seems that the occupation in that column is too specific, so for further improvement, I will clean them up, and separate them into several categories, then add them into the model.
 
 ## Citation
 
@@ -221,164 +215,117 @@ https://www.env.go.jp/chemi/ceh/en/index.html
 
 6. Kelly, B., Williams, S., Collins, S., Mushtaq, F., Mon-Williams, M., Wright, B., Mason, D., & Wright, J. (2019). The association between socioeconomic status and autism diagnosis in the United Kingdom for children aged 5–8 years of age: Findings from the Born in Bradford cohort. Autism, 23(1), 131–140. https://doi.org/10.1177/1362361317733182
 
+7. Khaiman C, Onnuam K, Photchanakaew S, Chonchaiya W, Suphapeetiporn K. Risk factors for autism spectrum disorder in the Thai population. Eur J Pediatr. 2015 Oct;174(10):1365-72. doi: 10.1007/s00431-015-2544-2. Epub 2015 Apr 23. PMID: 26226890.
+
 
 \newpage
 ## Appendix
-### More EDA
-```{r echo=FALSE, fig.cap="distribution plots for number of language, number of comments, number of views and duration"}
-p1 <- ggplot(data = talks) + 
-  aes(x=num_lang) + 
-  geom_histogram(binwidth = 2,fill="steelblue")+
-  labs(title = "distribution of available languages",x = "number of available languages")
+### EDA continued
 
-p2 <- ggplot(data = talks) + 
-  aes(comments) + 
-  geom_histogram(binwidth = 100,fill="darkseagreen")+
-  xlim(0,2000)+
-  labs(title = "distribution of comments",x = "number of comments")
+```{r echo=FALSE, fig.height=4, fig.width= 10, message=FALSE,warning=FALSE}
+# Contingency table for sex and ASD
+eco2%>%
+  ggplot()+
+  geom_mosaic(aes(x = product(ASD, sex), fill=ASD)) + 
+  coord_cartesian(ylim = c(0.95, 1))+
+  scale_y_continuous( breaks = c(0.95,1), name = "Prevalence of ASD")+
+  labs(title="Fig3-1. Mosaic graph for child's sex and ASD")
 
-p3 <- ggplot(data = talks) + 
-  aes(view_ted) + 
-  geom_histogram(binwidth = 500000,fill="darkorange2")+
-  xlim(0,20000000)+
-  labs(title = "distribution of views",x = "number of views")
+eco2%>%
+  ggplot()+
+  geom_mosaic(aes(x = product(ASD, sex), fill=ASD)) + 
+  coord_cartesian(ylim = c(0.95, 1))+
+  scale_y_continuous( breaks = c(0.95,1), name = "Prevalence of ASD")+
+  facet_wrap( ~ district, ncol=3)+
+  labs(title="Fig3-2. Mosaic graph for child's sex and ASD by district")
 
-p4 <- ggplot(data = talks) + 
-  aes(duration_ted/60) + 
-  geom_histogram(binwidth = 1,fill="hotpink3")+
-  labs(title = "distribution of duration",x = "duration/min")
-grid.arrange(p1,p2,p3,p4,nrow=2)
-```
-
-```{r echo=FALSE, fig.cap="plots for count of category"}
-##category
-talks %>%
-  count(categories, sort = TRUE) %>%
-  mutate(event = reorder(categories, n)) %>%
-  ggplot(aes(n, categories)) +
-  geom_col(fill="tan4") +
-  labs(y = NULL)
-```
-
-### Model Validation
-
-```{r echo=FALSE, fig.height=2.5, fig.width=6, fig.cap="Residual plot and Q-Q plot."}
-#binnedplot(fitted(fit4),resid(fit4))
-re <- plot(fit4)
-qq <- qqmath(fit4)
-grid.arrange(re,qq,nrow=1)
-```
-
-```{r echo=FALSE, fig.height=2, fig.width=4, fig.cap="Residuals vs Leverage."}
-ggplot(data.frame(lev=hatvalues(fit4),pearson=residuals(fit4,type="pearson")),
-      aes(x=lev,y=pearson)) +
-    geom_point() +
-    theme_bw()
-```
-   
-From the Residual plots in Figure 4 we can see that the mean of residuals is almost 0, but dots reduce on the right and left of the plot since the number of samples are small there, so it makes sense. And for the Q-Q plot in Figure 4, majority dots are on the lines so the normality is good. Figure 5 shows that there are not obvious leverage point.
-
-\newpage
-### Full Results
-Random effects of model
-```{r echo=FALSE}
-quantile(eco2$Income, probs = c(20, 40, 50, 60, 80, 100)/100, na.rm = TRUE)
-ranef(fit.glmer1)
-```
-Fixed effects of model
-```{r echo=FALSE}
-fixef(fit.glmer1)
-```
-Coefficients of model
-```{r echo=FALSE}
-coef(fit)
-```
-
-
-Then, I got the cleaned data with 2165 observations and 32 variables. But I will choose only several variables to use.
-
-Multiple separate logistic regression model were used with SES variables individually (household income, maternal and paternal education level) as explanatory variables and diagnosis of ASD as outcome variables, controlling for other possible risk factors such as paternal age, parental history of ASD and child's sex.  
-
-Therefore I use multilevel models to see what and how factors may influence the number of comments of talks. Before that, I clean the data and combine some information collected from YouTube for same talk video.
-
-```{r echo=FALSE, fig.height=4, fig.width= 10,fig.cap="Data was separate into English talks and not English talks. Different colors represent different categories.talke log of both comments and views to make it more easy to read."}
-ggplot(data = talks)+
-  aes(log(view_ted),log(comments))+
-  geom_point(aes(color = categories),alpha = 0.3)+
-  labs(title="number of visits vs number of comments",x="log(number of views)",y="log(number of comments)")+
-  geom_smooth(aes(color = categories),method = "lm",se=F)+
-  facet_grid(~english)
 
 # Contingency table for fASD and ASD
-prop.table(table(eco2$fASD, eco2$ASD), margin=1)*100
-table <- table(eco2$fASD, eco2$ASD)
-addmargins(table)
-
-eco2 %>% drop_na(fASD,ASD) %>%
-  ggplot(aes(x = as.factor(fASD), y = as.factor(ASD), fill = as.factor(ASD))) +
-   geom_bar(stat='identity',position =position_stack(reverse =TRUE))
-
 eco2%>% 
-  drop_na(fASD,ASD) %>%
   ggplot()+
   geom_mosaic(aes(x = product(ASD, fASD), fill=ASD)) + 
-  labs(title="Mosaic graph for child's ASD and father's ASD")
+  coord_cartesian(ylim = c(0.95, 1))+
+  scale_y_continuous( breaks = c(0.95,1), name = "Prevalence of ASD")+
+  labs(title="Fig4-1. Mosaic graph for child's ASD and father's ASD")
+
+eco2%>% 
+  ggplot()+
+  geom_mosaic(aes(x = product(ASD, fASD), fill=ASD)) + 
+  coord_cartesian(ylim = c(0.95, 1))+
+  scale_y_continuous( breaks = c(0.95,1), name = "Prevalence of ASD")+
+  facet_wrap( ~ district, ncol=3)+
+  labs(title="Fig4-2. Mosaic graph for child's ASD and father's ASD by district")
 
 # Contingency table for mASD and ASD
-prop.table(table(eco2$mASD, eco2$ASD), margin=1)*100
-table <- table(eco2$mASD, eco2$ASD)
-addmargins(table)
-
-eco2%>%
-  mutate_at(c("ASD","mASD"),factor) %>% 
-  drop_na(ASD,mASD) %>%ggplot()+
-  geom_mosaic(aes(x = product(ASD, mASD), fill=ASD)) + 
-  labs(title="Mosaic graph for child's ASD and father's ASD")
-
-# Contingency table for sex and ASD
-prop.table(table(eco2$sex, eco2$ASD), margin=1)*100
-table <- table(eco2$sex, eco2$ASD)
-addmargins(table)
-
-eco2%>%
-  mutate_at(c("ASD","sex"),factor) %>% 
-  drop_na(ASD,sex) %>%ggplot()+
-  geom_mosaic(aes(x = product(ASD, sex), fill=ASD)) + 
-   ylim(0.95, 1) +
-  labs(title="Mosaic graph for child's ASD and father's ASD")
-
-# Mosaic graph for Income and ASD grouped by unit
-eco2%>%
-  drop_na(ASD,Income) %>%
+eco2%>% 
   ggplot()+
-  geom_mosaic(aes(x = product(ASD, Income), fill=ASD)) + 
-  coord_cartesian(ylim = c(0.95, 1))+
-  scale_y_continuous( breaks = c(0.95,1), name = "Proportion of ASD")+
+  geom_mosaic(aes(x = product(ASD, mASD), fill=ASD)) + 
+  coord_cartesian(ylim = c(0.75, 1))+
+  scale_y_continuous( breaks = c(0.75,1), name = "Prevalence of ASD")+
+  labs(title="Fig5-1. Mosaic graph for child's ASD and mother's ASD")
+
+eco2%>% 
+  ggplot()+
+  geom_mosaic(aes(x = product(ASD, mASD), fill=ASD)) + 
+  coord_cartesian(ylim = c(0.75, 1))+
+  scale_y_continuous( breaks = c(0.75,1), name = "Prevalence of ASD")+
   facet_wrap( ~ district, ncol=3)+
-  labs(title="Mosaic graph for child's ASD and father's ASD")
+  labs(title="Fig5-2. Mosaic graph for child's ASD and mother's ASD by district")
 
-# Boxplot for paternal age and ASD 
-ggplot(eco2, aes(x=district, y=fathersage, fill=ASD)) + 
-    geom_boxplot()
-ggplot(eco2, aes(x=ASD, y=fathersage, fill=ASD)) + 
-    geom_boxplot()
 
-# Boxplot for maternal age and ASD 
-ggplot(eco2, aes(x=district, y=momsage, fill=ASD)) + 
-    geom_boxplot()
-ggplot(eco2, aes(x=ASD, y=momsage, fill=ASD)) + 
-    geom_boxplot()
+# Density plot for maternal age and ASD 
+mo <- eco2 %>% drop_na(momsage) %>% ddply("ASD", summarise, grp.mean=mean(momsage))
+ggplot(eco2, aes(x=momsage, fill=ASD)) +
+  geom_density(alpha=0.4)+
+  geom_vline(data=mo, aes(xintercept=grp.mean, color=ASD),
+             linetype="dashed")+
+  annotate("text", x=28, y=0.083, label="mean age=31.4",colour="red",size=4)+
+  annotate("text", x=37, y=0.083, label="mean age=32.8",colour="blue",size=4)+
+  labs(title="Fig6. Density plot for child's ASD and maternal age")
 
 #Correlation between parental age
 ggscatter(eco2, x = "fathersage", y = "momsage", 
           add = "reg.line", conf.int = TRUE, 
           cor.coef = TRUE, cor.method = "pearson",
-          xlab = "Paternal age", ylab = "Maternal age")
+          xlab = "Paternal age", ylab = "Maternal age")+
+  labs(title="Fig7. Scatter plot for paternal age and maternal age")
 
-res <- cor.test(eco3$momsage, eco3$fathersage, 
-                    method = "pearson")
-res
-res$p.value
-res$estimate
 
+```
+
+### Model Validation
+
+```{r echo=FALSE, fig.height=2.5, fig.width=6, message=FALSE,warning=FALSE}
+binnedplot(fitted(fit),resid(fit,type="response"),main="Binned residual plot for Multilevel logistic regression")
+## 'fill' and label lines:
+cat(" ","\n")
+cat("The pairwise plot of by-district random effects","\n")
+pairscor.fnc(ranef(fit)$district)
+```
+
+
+   
+From the binned residual plots we cannot see any specific shape or deviation from the mean of residual. A lot of residual dots lined up on a line on the lower left in this residual plot just represents there are a lot of 0 values in this data set, which means most of the children do not develop ASD.
+
+The The pairwise plot of by-district random effects suggests each random effect for intercept, middle income and high income follows approximately normal, but might have an outlier;the possible outlier is the district with the highest random intercept, lowest random middle income, and lowest random high income value (which represents top-left-most point in the top-middle plot and top-right plot, or bottom-left-most point in the middle-right plot). 
+
+\newpage
+### Full Results
+Random effects of model
+```{r echo=FALSE}
+cat("Table of random effect", "\n")
+cat(" ", "\n")
+ranef(fit)
+```
+Fixed effects of model
+```{r echo=FALSE}
+cat("Table of fixed effect", "\n")
+cat(" ", "\n")
+fixef(fit)
+```
+Coefficients of model
+```{r echo=FALSE}
+cat("Table of mixed effect", "\n")
+cat(" ", "\n")
+coef(fit)
 ```
